@@ -1,3 +1,10 @@
+'''
+m_matrix is the output of P3
+there is a 3D matrix
+m_matrix is made to contain all "link opening programs"
+so every array reperesent an opening program
+
+'''
 m_matrix = [
     [   [17, [4, 8, 30, 30]],   #a #21
         [33, [4, 7, 30, 3]],    #b
