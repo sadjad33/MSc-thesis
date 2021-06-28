@@ -1,4 +1,6 @@
 from azinfunctions import *
+import random
+from math import exp
 ### step 0 - initializing:
 # CarNetwork = [link no., i, j, t, h]
 # here is '3 node 6 link network':
@@ -15,6 +17,8 @@ O_k = [1, 2, 0]
 D_s = [58.3, 11.68, 131.25]
 # travel time for damaged links in network:
 big_M = 30
+
+max_n = 80
 
 # finding damaged links in the network
 damaged_links = [item for item in initial_network if item[-1] != 0]
@@ -52,3 +56,38 @@ def link_visibility():
 	#    print(f'l= ({l[1]+1}, {l[2]+1}) , no_l= {no_l}')
 	    vis.append(base - no_l)
 	return(vis)
+
+
+def ant_choose_link(pmnl):
+	''' pmnl is a cumulative multidimensional matrix of probability of choosing link l
+	by ant m in time n
+	pmnl = [[p101, p102, p103],
+			[p201, p202, p203],
+			[p301, p302, p303]]
+	'''
+	choosen_link = []
+	for ant in pmnl:
+		rnd = random.random()
+		if rnd <= ant[0]:
+			choosen_link.append(0)
+		elif rnd <= ant[1]:
+			choosen_link.append(1)
+		elif rnd <= ant[2]:
+			choosen_link.append(3)
+	'''this func. returns an array called "choosen link"
+	choosen_link[m] = the link which is choosen by ant m for reopening'''
+	return(choosen_link)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
