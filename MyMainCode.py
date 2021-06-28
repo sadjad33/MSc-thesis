@@ -19,6 +19,8 @@ D_s = [58.3, 11.68, 131.25]
 big_M = 30
 
 max_n = 80
+beta = .5
+rho = .5
 
 # finding damaged links in the network
 damaged_links = [item for item in initial_network if item[-1] != 0]
@@ -26,11 +28,13 @@ damaged_links = [item for item in initial_network if item[-1] != 0]
 
 ### step 1 - Calculation of initial pheromone and visibility for damaged links:
 # initial pheromone tau(0) of each damaged link:
-tau = [1 for link in damaged_links]
+tau = [[1 for times in range(max_n)] for link in damaged_links]
+# tau is matrix with l rows and n columns
 
 # visibility of each damaged link:
 def link_visibility():
-#	Vl = Σ[(Ok*Ds)/(tks_b)] - Σ[(Ok*Ds)/(tks_-l)]
+	#	 Vl = Σ[(Ok*Ds)/(tks_b)] - Σ[(Ok*Ds)/(tks_-l)]
+	# this function returns an array of l item (Vl).
 	vis = []
 	base = 0
 	for i, ok in enumerate(O_k):
@@ -55,7 +59,13 @@ def link_visibility():
 	#                print(f'tks= {tks_no_l}')
 	#    print(f'l= ({l[1]+1}, {l[2]+1}) , no_l= {no_l}')
 	    vis.append(base - no_l)
-	return(vis)
+	#	 vis = [visibility of first dmgd link, ..., visibility of last dmgd link]
+	# 	 visibility should not be greater than 1
+	scaled_visibility = []
+	for item in vis:
+		scaled_visibility.append(item/max(vis))
+	return(scaled_visibility)
+
 
 
 def ant_choose_link(pmnl):
