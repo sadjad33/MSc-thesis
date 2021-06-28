@@ -66,6 +66,17 @@ def link_visibility():
 		scaled_visibility.append(item/max(vis))
 	return(scaled_visibility)
 
+def utility():
+	# utility function:
+	u = []
+	for i, link in enumerate(tau):
+		u.append([])
+		for tau_nl in link:
+			u[i].append(tau_nl + rho * link_visibility[i])
+	# u matrix is like tau matrix
+	return(u)
+
+
 
 
 def ant_choose_link(pmnl):
@@ -87,17 +98,5 @@ def ant_choose_link(pmnl):
 	'''this func. returns an array called "choosen link"
 	choosen_link[m] = the link which is choosen by ant m for reopening'''
 	return(choosen_link)
-
-
-
-
-
-
-
-
-
-
-
-
 
 
