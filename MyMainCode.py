@@ -10,7 +10,7 @@ initial_network = [
 	[4, 1, 2, 3, 30],
 	[5, 2, 1, 3, 0]
 	]
-# here is Ok and Ds:
+# here is Ok (rescue teams in each node k) and Ds (demand in each node s):
 O_k = [1, 2, 0]
 D_s = [58.3, 11.68, 131.25]
 # travel time for damaged links in network:
@@ -26,6 +26,7 @@ tau = [1 for link in damaged_links]
 
 # visibility of each damaged link:
 def link_visibility():
+#	Vl = Σ[(Ok*Ds)/(tks_b)] - Σ[(Ok*Ds)/(tks_-l)]
 	vis = []
 	base = 0
 	for i, ok in enumerate(O_k):
