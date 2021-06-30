@@ -1,9 +1,9 @@
-from azinfunctions import *
+from azinfunctions import shortest_path
 import random
 from math import exp
 ### step 0 - initializing:
-# CarNetwork = [link no., i, j, t, h]
-# here is '3 node 6 link network':
+	# CarNetwork = [link no., i, j, t, h]
+	# here is '3 node 6 link network':
 initial_network = [
 	[0, 0, 1, 4, 0],
 	[1, 1, 0, 4, 60],
@@ -12,29 +12,42 @@ initial_network = [
 	[4, 1, 2, 3, 30],
 	[5, 2, 1, 3, 0]
 	]
-# here is Ok (rescue teams in each node k) and Ds (demand in each node s):
+
+n_network = [
+	[[0, 0, 1, 4],
+	[1, 1, 0, 60],
+	[2, 0, 2, 8],
+	[3, 2, 0, 50],
+	[4, 1, 2, 30],
+	[5, 2, 1, 3]]
+	]
+
+
+	# here is Ok (rescue teams in node k) and Ds (demand in node s):
 O_k = [1, 2, 0]
 D_s = [58.3, 11.68, 131.25]
-# travel time for damaged links in network:
+	# travel time for damaged links in network:
 big_M = 30
 
-max_n = 80
+max_n = 8
 beta = .5
 rho = .5
 
-# finding damaged links in the network
+	# finding damaged links in the network
 damaged_links = [item for item in initial_network if item[-1] != 0]
 
 
-### step 1 - Calculation of initial pheromone and visibility for damaged links:
-# initial pheromone tau(0) of each damaged link:
+### step 1 - Calculation of initial pheromone
+		# and visibility for damaged links:
+	# initial pheromone tau(0) of each damaged link:
 tau = [[1 for times in range(max_n)] for link in damaged_links]
-# tau is matrix with l rows and n columns
+	# tau is a matrix with l rows and n columns
 
-# visibility of each damaged link:
+	# visibility of each damaged link:
 def link_visibility():
-	#	 Vl = Σ[(Ok*Ds)/(tks_b)] - Σ[(Ok*Ds)/(tks_-l)]
-	# this function returns an array of l item (Vl).
+	#	Vl = Σ[(Ok*Ds)/(tks_b)] - Σ[(Ok*Ds)/(tks_-l)]
+		# this function returns an array of l item (Vl).
+		#
 	vis = []
 	base = 0
 	for i, ok in enumerate(O_k):
@@ -60,7 +73,7 @@ def link_visibility():
 	#    print(f'l= ({l[1]+1}, {l[2]+1}) , no_l= {no_l}')
 	    vis.append(base - no_l)
 	#	 vis = [visibility of first dmgd link, ..., visibility of last dmgd link]
-	# 	 visibility should not be greater than 1
+	# 	 visibility should not be greater than 1:
 	scaled_visibility = []
 	for item in vis:
 		scaled_visibility.append(item/max(vis))
@@ -71,18 +84,40 @@ def utility(u_array):
 	# utility function:
 	for i, link in enumerate(tau):
 		for j, tau_nl in enumerate(link):
-			u_array[i][j] = (tau_nl + rho * link_visibility()[i])
+			u_array[i][j] = (tau_nl + beta * link_visibility()[i])
 	# u matrix is like tau matrix
 	return(u_array)
 
-p = [[], [], [],
-	[], [], [],
-	[], [], []]
+
+def L(n_L, i_L):
+	# 	it gets n (time) as input and returns L array
+		# L is an array of i items (nodes of the network)
+		# each item is an array, which contains nodes that 
+		# can be accessed at time n from node i. (just first nodes
+		# of damaged links)
+
+		## IT RETURNS THE ARRAY OF ACCESSIBLE DAMAGED LINKS 
+		## FOR REOPENING FOR THE ANTS IN NODE I AT TIME N
+
+	L_array = []
+	network = n_network[n_L]
+	shortest_time_i = shortest_path(origin= i_L, car_network_sp= network)[0]
+	for link in damaged_links:
+		if shortest_time_i[link[1]] < big_M:
+			L_array.append(link)
+	return(L_array)
+
+def probability(n_p, m_p):
+	#	it takes n (time) and m (ant no.) as input
+	u_n = [utility(u)[links][n_p] for links in range(len(tau))]
+
+
+
 
 
 def ant_choose_link(pmnl):
-	''' pmnl is a cumulative multidimensional matrix of probability of choosing link l
-	by ant m in time n
+	''' pmnl is a cumulative multidimensional matrix of
+	probability of choosing link l by ant m in time n
 	pmnl = [[p101, p102, p103],
 			[p201, p202, p203],
 			[p301, p302, p303]]
@@ -101,4 +136,7 @@ def ant_choose_link(pmnl):
 	return(choosen_link)
 
 print(link_visibility())
+
+
+
 
