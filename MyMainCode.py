@@ -39,7 +39,7 @@ rho = .5
 damaged_links = [item for item in initial_network if item[-1] != 0]
 
 
-### step 1 - Calculation of initial pheromone
+### Step 1 - Calculation of initial pheromone
 		# and visibility for damaged links:
 	# initial pheromone tau(0) of each damaged link:
 tau = [[1 for times in range(max_n)] for link in damaged_links]
@@ -80,6 +80,8 @@ def link_visibility():
 	for item in vis:
 		scaled_visibility.append(item/max(vis))
 	return(scaled_visibility)
+
+### Step 2 - Calculating the probability of selecting links for ants:
 
 
 def utility():
@@ -134,14 +136,19 @@ def probability(n_p):
 	p(i, l)'''
 
 
-
+'''
+baraye khodam: baraye estefade az "ant_choose_link" bayad begam har moorche tooye 
+kodoom gereh qarar dare va bad ehtemale entekhabe link haye asib Dde qabel dastrasi 
+az oon greh ro ba tabe "probability" be dast biaram. yek araye besazam mesle pml ke
+mige tooye zamane n, ehtemale entekhabe kamane l baraye moorche m cheqadre.
+'''
 
 def ant_choose_link(pmnl):
 	''' pmnl is a cumulative multidimensional matrix of
-	probability of choosing link l by ant m in time n
-	pmnl = [[p101, p102, p103],
-			[p201, p202, p203],
-			[p301, p302, p303]]
+	probability of choosing link l by ant m in time n (time is specific)
+	pml = [[p11, p12, p13],
+			[p21, p22, p23],
+			[p31, p32, p33]]
 	'''
 	choosen_link = []
 	for ant in pmnl:
