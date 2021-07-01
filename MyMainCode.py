@@ -13,6 +13,7 @@ initial_network = [
 	[5, 2, 1, 3, 0]
 	]
 
+
 n_network = [
 	[[0, 0, 1, 4],
 	[1, 1, 0, 60],
@@ -22,7 +23,8 @@ n_network = [
 	[5, 2, 1, 3]]
 	]
 
-
+nodes = set([link[1] for link in initial_network] 
+		+ [link[2] for link in initial_network])
 	# here is Ok (rescue teams in node k) and Ds (demand in node s):
 O_k = [1, 2, 0]
 D_s = [58.3, 11.68, 131.25]
@@ -79,13 +81,15 @@ def link_visibility():
 		scaled_visibility.append(item/max(vis))
 	return(scaled_visibility)
 
-u = [[0 for i in link] for link in tau]
-def utility(u_array):
+
+def utility():
+	u_array = [[0 for i in links] for links in tau]
 	# utility function:
 	for i, link in enumerate(tau):
 		for j, tau_nl in enumerate(link):
 			u_array[i][j] = (tau_nl + beta * link_visibility()[i])
-	# u matrix is like tau matrix
+	# u matrix is like tau
+	# (with l rows and n columns)
 	return(u_array)
 
 
@@ -107,10 +111,27 @@ def L(n_L, i_L):
 			L_array.append(link)
 	return(L_array)
 
-def probability(n_p, m_p):
+def probability(n_p):
 	#	it takes n (time) and m (ant no.) as input
-	u_n = [utility(u)[links][n_p] for links in range(len(tau))]
-
+	u_n = [utility()[links][n_p] for links in range(len(tau))]
+	prob = [[] for node in nodes]
+	for node in nodes:
+		L_node = L(n_L= n_p, i_L= node)
+		p_denominator = 0
+		for link in L_node:
+			link_index = damaged_links.index(link)
+			p_denominator += exp(u_n[link_index])
+		for link in L_node:
+			link_index = damaged_links.index(link)
+			prob[node].append(exp(u_n[link_index])/p_denominator)
+	return(prob)
+	# this function returns an array of i (number of network's nodes) arrays
+	# each array contains prob. of damaged links for choosing in time n
+	''' prob = [
+	[p11, p12, p13],
+	[p21, p22], ---> link no. 3 is not accessible from node no. 2 in time n
+	[p31, p32, p33]] 
+	p(i, l)'''
 
 
 
@@ -135,7 +156,6 @@ def ant_choose_link(pmnl):
 	choosen_link[m] = the link which is choosen by ant m for reopening'''
 	return(choosen_link)
 
-print(link_visibility())
 
 
 
