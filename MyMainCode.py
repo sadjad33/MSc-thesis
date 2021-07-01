@@ -23,6 +23,14 @@ n_network = [
 	[5, 2, 1, 3]]
 	]
 
+ants_condition = [1, 1, 1]
+
+ants_depot = [1, 1, 0] 		# ant condition = 1
+ants_inpath = [-1, -1, -1] 	# ant condition = 2
+ants_link = [-1, -1, -1] 	# ant condition = 3
+
+
+
 nodes = set([link[1] for link in initial_network] 
 		+ [link[2] for link in initial_network])
 	# here is Ok (rescue teams in node k) and Ds (demand in node s):
@@ -113,57 +121,60 @@ def L(n_L, i_L):
 			L_array.append(link)
 	return(L_array)
 
-def probability(n_p):
-	#	it takes n (time) and m (ant no.) as input
+def choosen_link(n_p, i_p):
+	#	it takes n (time) and i (ant depot) as input
 	u_n = [utility()[links][n_p] for links in range(len(tau))]
-	prob = [[] for node in nodes]
-	for node in nodes:
-		L_node = L(n_L= n_p, i_L= node)
-		p_denominator = 0
-		for link in L_node:
-			link_index = damaged_links.index(link)
-			p_denominator += exp(u_n[link_index])
-		for link in L_node:
-			link_index = damaged_links.index(link)
-			prob[node].append(exp(u_n[link_index])/p_denominator)
-	return(prob)
-	# this function returns an array of i (number of network's nodes) arrays
-	# each array contains prob. of damaged links for choosing in time n
-	''' prob = [
-	[p11, p12, p13],
-	[p21, p22], ---> link no. 3 is not accessible from node no. 2 in time n
-	[p31, p32, p33]] 
-	p(i, l)'''
+	prob = []
+	L_node = L(n_L= n_p, i_L= i_p)
+	p_denominator = 0
+	for link in L_node:
+		link_index = damaged_links.index(link)
+		p_denominator += exp(u_n[link_index])
+	for link in L_node:
+		link_index = damaged_links.index(link)
+		prob.append(exp(u_n[link_index])/p_denominator)
 
+	# "prob" is an array contains probability of
+	# damaged links for choosing in time n, by ants 
+	# which are depoted in node i.
+	''' prob = p(l) = [p1, p2]'''
 
-'''
-baraye khodam: baraye estefade az "ant_choose_link" bayad begam har moorche tooye 
-kodoom gereh qarar dare va bad ehtemale entekhabe link haye asib Dde qabel dastrasi 
-az oon greh ro ba tabe "probability" be dast biaram. yek araye besazam mesle pml ke
-mige tooye zamane n, ehtemale entekhabe kamane l baraye moorche m cheqadre.
-'''
+	# creating cumulative probability array from prob array
+	cum_prob = []
+	for i, p in enumerate(prob):
+		if i == 0:
+			cum_prob.append(p)
+		else:
+			cum_prob.append(p + cum_prob[i-1])
 
-def ant_choose_link(pmnl):
-	''' pmnl is a cumulative multidimensional matrix of
-	probability of choosing link l by ant m in time n (time is specific)
-	pml = [[p11, p12, p13],
-			[p21, p22, p23],
-			[p31, p32, p33]]
-	'''
-	choosen_link = []
-	for ant in pmnl:
-		rnd = random.random()
-		if rnd <= ant[0]:
-			choosen_link.append(0)
-		elif rnd <= ant[1]:
-			choosen_link.append(1)
-		elif rnd <= ant[2]:
-			choosen_link.append(3)
-	'''this func. returns an array called "choosen link"
-	choosen_link[m] = the link which is choosen by ant m for reopening'''
-	return(choosen_link)
+	rnd = random()
+
+	for i, p in enumerate(cum_prob):
+		if rnd < p:
+			choosen = L_node[i]
+			break
+	return(choosen)
+	# this function returns one of the "damaged_links" which is choosen
+	# by an ant in depot node i at the time n
+	
 
 
 
+for n in range(max_n):
+	for ant_no, ant_state in enumerate(ants_condition):
+		if ant_state = 1:
+			depot = ants_depot[ant_no]
+			open_link = choosen_link(n_p= n, i_p= depot)
+			start_node = open_link[1]
+			time_to_link = shortest_path(origin= depot, 
+				car_network_sp= n_network[n])[0][start_node]
+			if time_to_link == 0:
+				ants_condition[ant_no] = 3
+			else:
+				ants_condition[ant_no] = 2
 
+
+		elif ant_state = 2:
+
+		elif ant_state =3:
 
