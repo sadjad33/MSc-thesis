@@ -1,6 +1,74 @@
-from azinfunctions import shortest_path
 from random import random
 from math import exp
+
+
+def shortest_path(origin, car_network_sp):
+    # CarNetwork = [link no.,  i,  j,  a,  b,  x,  t,  length]
+    '''If there are n nodes and m links in the network,
+    the numbering of nodes and links must start from 0 and continue to n-1 (or m-1).'''
+    t = [item[3] for item in car_network_sp]  # 3rd. column of the network is link's travel time
+    numofnodes = len(set([item[1] for item in car_network_sp] + [item[2] for item in car_network_sp]))
+    numoflinks = len(car_network_sp)
+    proposal = []
+    ol = 0
+    i = origin
+    time = [float('inf') for i in range(numofnodes)]  # all nodes time is infinity
+    check_subset = [node for node in range(numofnodes)]  # Uninvestigated Nodes Susbet
+    label = [-1 for i in range(numofnodes)]
+    time[origin] = 0
+    del check_subset[origin]
+    counter = 1
+
+    while True:
+        g = len(check_subset)
+        if len(check_subset) == 0:
+            # label[origin] = origin
+            break
+        # 1. updating and Labling next node
+        for j in range(numoflinks):
+            if car_network_sp[j][1] == i:
+                if time[car_network_sp[j][2]] > time[i] + car_network_sp[j][3]:
+                    label[car_network_sp[j][2]] = i  # yani labele gere ghablesh ro bezar "i".
+                    time[car_network_sp[j][2]] = time[i] + car_network_sp[j][3]
+        # 2. Finding min t
+        min_time = time[check_subset[0]]  # primary min time amount
+        min_time_node = check_subset[0]  # min time primary place of array --- shomare gere
+        for h in range(g):
+            if time[check_subset[h]] < min_time:
+                min_time = time[check_subset[h]]
+                min_time_node = check_subset[h]
+                ol = len(proposal)
+            for ku in range(len(proposal)):
+                if proposal[ku] == min_time_node:
+                    break
+            proposal = []
+            proposal = list(set(proposal))
+            ol = len(proposal)
+
+        for h in range(g):
+            if time[check_subset[h]] != float('inf') and min_time_node != check_subset[h]:
+                ol += 1
+                proposal.append(check_subset[h])
+        proposal = list(set(proposal))
+        ol = len(proposal)
+        if min_time == float('inf'):
+            for re in range(ol):
+                if time[proposal[re]] < min_time:
+                    min_time = time[proposal[re]]
+                    min_time_node = proposal[re]
+        i = min_time_node
+        g = len(check_subset)
+        if i not in check_subset:
+            break
+        # 3. Remove investigated node
+        for h in range(g):
+            if check_subset[h] == i:
+                v = h
+        del check_subset[v]
+        counter += 1
+
+    return time, label
+
 
 ### step 0 - initializing:
 # CarNetwork = [link no., i, j, t, h]
@@ -38,7 +106,7 @@ D_s = [58.3, 11.68, 131.25]
 # travel time for damaged links in network:
 big_M = 30
 
-max_n = 35
+max_n = 60
 beta = .5
 rho = .5
 
@@ -91,29 +159,29 @@ def link_visibility():
         scaled_visibility.append(item / max(vis))
     return (scaled_visibility)
 
+link_visibility = link_visibility()
+
 
 ### Step 2 - Calculating the probability of selecting links for ants:
 
 
-def utility():
-    u_array = [[0 for i in links] for links in tau]
-    # utility function:
-    for i, link in enumerate(tau):
-        for j, tau_nl in enumerate(link):
-            u_array[i][j] = (tau_nl + beta * link_visibility()[i])
-    # u matrix is like tau
-    # (with l rows and n columns)
-    return (u_array)
+utility = [[0 for i in links] for links in tau]
+# utility function:
+for i, link in enumerate(tau):
+    for j, tau_nl in enumerate(link):
+        utility[i][j] = (tau_nl + beta * link_visibility[i])
+# u matrix is like tau
+# (with l rows and n columns)
 
 
 def L(n_L, i_L):
     #   it gets n (time) as input and returns L array
     # L is an array of i items (nodes of the network)
-    # each item is an array, which contains nodes that 
+    # each item is an array, which contains nodes that
     # can be accessed at time n from node i. (just first nodes
     # of damaged links)
 
-    ## IT RETURNS THE ARRAY OF ACCESSIBLE DAMAGED LINKS 
+    ## IT RETURNS THE ARRAY OF ACCESSIBLE DAMAGED LINKS
     ## FOR REOPENING FOR THE ANTS IN NODE I AT TIME N
 
     L_array = []
@@ -125,9 +193,9 @@ def L(n_L, i_L):
     return (L_array)
 
 
-def choosen_link(n_p, i_p):
+def chosen_link(n_p, i_p):
     #   it takes n (time) and i (ant depot) as input
-    u_n = [utility()[links][n_p] for links in range(len(tau))]
+    u_n = [utility[links][n_p] for links in range(len(damaged_links))]
     prob = []
     L_node = L(n_L=n_p, i_L=i_p)
     p_denominator = 0
@@ -139,7 +207,7 @@ def choosen_link(n_p, i_p):
         prob.append(exp(u_n[link_index]) / p_denominator)
 
     # "prob" is an array contains probability of
-    # damaged links for choosing in time n, by ants 
+    # damaged links for choosing in time n, by ants
     # which are depoted in node i.
     ''' prob = p(l) = [p1, p2]'''
 
@@ -152,17 +220,17 @@ def choosen_link(n_p, i_p):
             cum_prob.append(p + cum_prob[i - 1])
 
     rnd = random()
-
+    
     for i, p in enumerate(cum_prob):
         if rnd < p:
-            choosen = L_node[i]
+            chosen = L_node[i]
             break
     print(f'prob= {prob}')
     print(f'random= {rnd}')
-    return (choosen)
+    return chosen
 
 
-# this function returns one of the "damaged_links" which is choosen
+# this function returns one of the "damaged_links" which is chosen
 # by an ant in depot node i at the time n
 
 
@@ -173,7 +241,7 @@ for n in range(max_n):
         if ant_state == 1:
             print(f'ant_no= {ant_no}')
             depot = ants_depot[ant_no]
-            open_link = choosen_link(n_p=n, i_p=depot)
+            open_link = chosen_link(n_p=n, i_p=depot)
             start_node = open_link[1]
             ants_link[ant_no] = open_link[0]
             time_to_link = shortest_path(origin=depot,
@@ -197,7 +265,10 @@ for n in range(max_n):
             if link_time_to_finish[ants_link[ant_no]] <= 0:
                 ants_condition[ant_no] = 1
                 ants_depot[ant_no] = initial_network[ants_link[ant_no]][2]
-                damaged_links.remove(initial_network[ants_link[ant_no]])
+                print(initial_network[ants_link[ant_no]])
+                print(damaged_links)
+                if initial_network[ants_link[ant_no]] in damaged_links:
+                    damaged_links.remove(initial_network[ants_link[ant_no]])
             else:
                 link_time_to_finish[ants_link[ant_no]] -= 1
             dmg_index = copy_damaged_links.index(initial_network[ants_link[ant_no]])
@@ -213,22 +284,3 @@ for n in range(max_n):
         n_network[n + 1][-1].pop()
 
     print(n_network[-1])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
