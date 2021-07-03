@@ -104,7 +104,7 @@ nodes = set([link[1] for link in initial_network]
 O_k = [1, 2, 0]
 D_s = [58.3, 11.68, 131.25]
 # travel time for damaged links in network:
-big_M = 30
+big_M = 15
 
 max_n = 80
 beta = .5
@@ -132,7 +132,7 @@ def link_visibility():
     base = 0
     for i, ok in enumerate(O_k):
         for j, ds in enumerate(D_s):
-            if i != j:
+            if i != j and ok != 0:
                 tks_b = shortest_path(origin=i, car_network_sp=initial_network)[0][j]
                 base += (ok * ds) / (tks_b)
 
@@ -157,6 +157,7 @@ def link_visibility():
     scaled_visibility = []
     for item in vis:
         scaled_visibility.append(item / max(vis))
+    print (scaled_visibility)
     return (scaled_visibility)
 
 link_visibility = link_visibility()
@@ -293,4 +294,36 @@ for n in range(max_n):
         n_network[n + 1][-1].pop()
 
     print('n_network=', n_network[-1])
+
+### Step 4 - Calculate travel time between each origin-destination at any time:
+
+
+tks_matrix = []
+for n in range(max_n):
+    tks_matrix.append([])
+    for i, ok in enumerate(O_k):
+        for j, ds in enumerate(D_s):
+            if i != j and ok != 0:
+                tksn = shortest_path(origin= i, car_network_sp= n_network[n])[0][j]
+                tks_matrix[-1].append(tksn)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
