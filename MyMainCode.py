@@ -3,9 +3,9 @@ from math import exp
 
 
 def shortest_path(origin, car_network_sp):
-    # CarNetwork = [link no.,  i,  j,  a,  b,  x,  t,  length]
+    # CarNetwork = [link no.,  i,  j,  t]
     '''If there are n nodes and m links in the network,
-    the numbering of nodes and links must start from 0 and continue to n-1 (or m-1).'''
+    the numbering of nodes and links should start from 0 and continue to n-1 (or m-1).'''
     t = [item[3] for item in car_network_sp]  # 3rd. column of the network is link's travel time
     numofnodes = len(set([item[1] for item in car_network_sp] + [item[2] for item in car_network_sp]))
     numoflinks = len(car_network_sp)
@@ -80,7 +80,7 @@ initial_network = [
     [3, 2, 0, 8, 50],
     [4, 1, 2, 3, 30],
     [5, 2, 1, 3, 0]
-]
+    ]
 
 n_network = [
     [[0, 0, 1, 4],
@@ -89,7 +89,7 @@ n_network = [
      [3, 2, 0, 50],
      [4, 1, 2, 30],
      [5, 2, 1, 3]]
-]
+    ]
 
 ants_condition = [1, 1, 1]
 
@@ -106,7 +106,7 @@ D_s = [58.3, 11.68, 131.25]
 # travel time for damaged links in network:
 big_M = 30
 
-max_n = 60
+max_n = 80
 beta = .5
 rho = .5
 
@@ -237,42 +237,51 @@ def chosen_link(n_p, i_p):
 ### Step 3 - Allocate ants and determine the reopening program (yn):
 for n in range(max_n):
     print(f'time= {n}')
-    for ant_no, ant_state in enumerate(ants_condition):
-        if ant_state == 1:
-            print(f'ant_no= {ant_no}')
-            depot = ants_depot[ant_no]
-            open_link = chosen_link(n_p=n, i_p=depot)
-            start_node = open_link[1]
-            ants_link[ant_no] = open_link[0]
-            time_to_link = shortest_path(origin=depot,
-                                         car_network_sp=n_network[n])[0][start_node]
-            if time_to_link == 0:
-                ants_condition[ant_no] = 3
-                link_time_to_finish[ants_link[ant_no]] -= 1
-            else:
-                ants_condition[ant_no] = 2
-                pathtime_remained[ant_no] = time_to_link - 1
-            link_with_ant[damaged_links.index(open_link)][n] += 1
-        elif ant_state == 2:
-            if pathtime_remained[ant_no] <= 0:
-                ants_condition[ant_no] = 3
-                link_time_to_finish[ants_link[ant_no]] -= 1
-            else:
-                pathtime_remained[ant_no] -= 1
-            dmg_index = copy_damaged_links.index(initial_network[ants_link[ant_no]])
-            link_with_ant[dmg_index][n] += 1
-        elif ant_state == 3:
-            if link_time_to_finish[ants_link[ant_no]] <= 0:
-                ants_condition[ant_no] = 1
-                ants_depot[ant_no] = initial_network[ants_link[ant_no]][2]
-                print(initial_network[ants_link[ant_no]])
-                print(damaged_links)
-                if initial_network[ants_link[ant_no]] in damaged_links:
-                    damaged_links.remove(initial_network[ants_link[ant_no]])
-            else:
-                link_time_to_finish[ants_link[ant_no]] -= 1
-            dmg_index = copy_damaged_links.index(initial_network[ants_link[ant_no]])
-            link_with_ant[dmg_index][n] += 1
+    if not damaged_links:
+        pass
+    else:
+        for ant_no, ant_state in enumerate(ants_condition):
+            if ant_state == 1:
+                print(f'ant_no= {ant_no}')
+                depot = ants_depot[ant_no]
+                open_link = chosen_link(n_p=n, i_p=depot)
+                print('open_link=', open_link)
+                start_node = open_link[1]
+                ants_link[ant_no] = open_link[0]
+                time_to_link = shortest_path(origin=depot,
+                                             car_network_sp=n_network[n])[0][start_node]
+                if time_to_link == 0:
+                    ants_condition[ant_no] = 3
+                    link_time_to_finish[ants_link[ant_no]] -= 1
+                else:
+                    ants_condition[ant_no] = 2
+                    pathtime_remained[ant_no] = time_to_link - 1
+                link_with_ant[damaged_links.index(open_link)][n] += 1
+            elif ant_state == 2:
+                if pathtime_remained[ant_no] <= 0:
+                    ants_condition[ant_no] = 3
+                    link_time_to_finish[ants_link[ant_no]] -= 1
+                    print('here we go')
+                else:
+                    pathtime_remained[ant_no] -= 1
+                dmg_index = copy_damaged_links.index(initial_network[ants_link[ant_no]])
+                link_with_ant[dmg_index][n] += 1
+            elif ant_state == 3:
+                if link_time_to_finish[ants_link[ant_no]] <= 0:
+                    # If the first ant (from two ants working on one link) completes the   
+                    # reopening operation, the second ant moves to another link at the same time.
+                    for other_ants_no in range(len(ants_condition)):
+                        if ants_link[ant_no] == ants_link[other_ants_no]:
+                            ants_condition[other_ants_no] = 1
+                            ants_depot[other_ants_no] = initial_network[ants_link[other_ants_no]][2]
+                            # print(initial_network[ants_link[ant_no]])
+                            # print('damaged_links=', damaged_links)
+                    if initial_network[ants_link[ant_no]] in damaged_links:
+                        damaged_links.remove(initial_network[ants_link[ant_no]])
+                else:
+                    link_time_to_finish[ants_link[ant_no]] -= 1
+                dmg_index = copy_damaged_links.index(initial_network[ants_link[ant_no]])
+                link_with_ant[dmg_index][n] += 1
 
     # updating n_network
     n_network.append([])
@@ -283,4 +292,5 @@ for n in range(max_n):
             n_network[n + 1][-1][3] = n_network[n + 1][-1][4]
         n_network[n + 1][-1].pop()
 
-    print(n_network[-1])
+    print('n_network=', n_network[-1])
+
