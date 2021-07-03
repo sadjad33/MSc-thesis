@@ -246,11 +246,11 @@ for iteration in range(11):
     ]
 
     ants_condition = [1, 1, 1]
-    link_time_to_finish = [item[-1] for item in initial_network]
     ants_depot = [1, 1, 0]          # ant condition = 1
     pathtime_remained = [0, 0, 0]   # ant condition = 2
     ants_link = [-1, -1, -1]        # ant condition = 3
     link_with_ant = [[0 for times in range(max_n)] for link in damaged_links]
+    link_time_to_finish = [item[-1] for item in initial_network]
 
 
     for n in range(max_n):
@@ -286,6 +286,8 @@ for iteration in range(11):
                     dmg_index = copy_damaged_links.index(initial_network[ants_link[ant_no]])
                     link_with_ant[dmg_index][n] += 1
                 elif ant_state == 3:
+                    if link_time_to_finish[ants_link[ant_no]] > 0:
+                        link_time_to_finish[ants_link[ant_no]] -= 1
                     if link_time_to_finish[ants_link[ant_no]] <= 0:
                         # If the first ant (from two ants working on one link) completes the   
                         # reopening operation, the second ant moves to another link at the same time.
@@ -297,8 +299,6 @@ for iteration in range(11):
                                 # print('damaged_links=', damaged_links)
                         if initial_network[ants_link[ant_no]] in damaged_links:
                             damaged_links.remove(initial_network[ants_link[ant_no]])
-                    else:
-                        link_time_to_finish[ants_link[ant_no]] -= 1
                     dmg_index = copy_damaged_links.index(initial_network[ants_link[ant_no]])
                     link_with_ant[dmg_index][n] += 1
 
@@ -345,6 +345,7 @@ for iteration in range(11):
         for s, t_ks in enumerate(tks_matrix[n]):
             if t_ks <= big_M:
                 G += Dks[s] * survival_function(n + t_ks)
+    print(G)
 
     ### Step 6- Determining the pheromone of the links:
 
