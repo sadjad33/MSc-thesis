@@ -328,13 +328,6 @@ for iteration in range(11):
 
     G = 0
     Dks = []
-    for n in range(max_n):
-        tks_matrix.append([])
-        for i, ok in enumerate(O_k):
-            for j in range(len(D_s)):
-                if i != j and ok != 0:
-                    tksn = shortest_path(origin= i, car_network_sp= n_network[n])[0][j]
-                    tks_matrix[-1].append(tksn)
 
     for i, ok in enumerate(O_k):
         for j, ds in enumerate(D_s):
