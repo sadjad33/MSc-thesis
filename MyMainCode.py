@@ -99,6 +99,7 @@ O_k = [1, 2, 0]
 D_s = [58.3, 11.68, 131.25]
 # travel time for damaged links in network:
 big_M = 15
+iteration_number = 11
 G_best = 0
 max_n = 80
 beta = .5
@@ -161,14 +162,15 @@ link_visibility = link_visibility()
 
 ### Step 2 - Calculating the probability of selecting links for ants:
 
-
-utility = [[0 for i in links] for links in tau]
-# utility function:
-for i, link in enumerate(tau):
-    for j, tau_nl in enumerate(link):
-        utility[i][j] = (tau_nl + beta * link_visibility[i])
-# u matrix is like tau
-# (with l rows and n columns)
+def utility():
+    utility_u = [[0 for i in links] for links in tau]
+    # utility function:
+    for i, link in enumerate(tau):
+        for j, tau_nl in enumerate(link):
+            utility_u[i][j] = (tau_nl + beta * link_visibility[i])
+    # u matrix is like tau
+    # (with l rows and n columns)
+    return utility_u
 
 
 def L(n_L, i_L):
@@ -192,7 +194,7 @@ def L(n_L, i_L):
 
 def chosen_link(n_p, i_p):
     #   it takes n (time) and i (ant depot) as input
-    u_n = [utility[links][n_p] for links in range(len(damaged_links))]
+    u_n = [utility()[links][n_p] for links in range(len(damaged_links))]
     prob = []
     L_node = L(n_L=n_p, i_L=i_p)
     p_denominator = 0
@@ -232,7 +234,7 @@ def chosen_link(n_p, i_p):
 
 
 ### Step 3 - Allocate ants and determine the reopening program (yn):
-for iteration in range(11): 
+for iteration in range(iteration_number): 
     print('T=', iteration)   
     damaged_links = [item for item in initial_network if item[-1] != 0]
     copy_damaged_links = [item for item in initial_network if item[-1] != 0]
@@ -355,7 +357,6 @@ for iteration in range(11):
                 tau[link][n] = rho * tau[link][n] + delta_tau
             else:
                 tau[link][n] *= .5
-
 print(G_best)
 #print(link_with_ant_best)    
 
