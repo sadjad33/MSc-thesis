@@ -234,8 +234,13 @@ def chosen_link(n_p, i_p):
 
 
 ### Step 3 - Allocate ants and determine the reopening program (yn):
-for iteration in range(iteration_number): 
-    print('T=', iteration)   
+#for iteration in range(iteration_number):
+iteration = 0
+all_G = []
+same_G = 0
+while True:
+    iteration += 1
+    print('T=', iteration)
     damaged_links = [item for item in initial_network if item[-1] != 0]
     copy_damaged_links = [item for item in initial_network if item[-1] != 0]
     n_network = [
@@ -262,11 +267,11 @@ for iteration in range(iteration_number):
                 pass
             else:
                 if ant_state == 1:
-                    print(f'time= {n}')
-                    print(f'ant_no= {ant_no}')
+                    #print(f'time= {n}')
+                    #print(f'ant_no= {ant_no}')
                     depot = ants_depot[ant_no]
                     open_link = chosen_link(n_p= n, i_p= depot)
-                    print('open_link=', open_link)
+                    #print('open_link=', open_link)
                     start_node = open_link[1]
                     ants_link[ant_no] = open_link[0]
                     time_to_link = shortest_path(origin= depot,
@@ -340,24 +345,62 @@ for iteration in range(iteration_number):
         for s, t_ks in enumerate(tks_matrix[n]):
             if t_ks <= big_M:
                 G += Dks[s] * survival_function(n + t_ks)
-    print(G)
+    all_G.append(round(G))
+    print(round(G))
 
     ### Step 6- Determining the pheromone of the links:
-
-    if G > G_best:
-        G_best = G
-        link_with_ant_best = link_with_ant
-
     G_y0 = 8648
-    delta_tau = (G_best - G_y0)/10000
+    if G >= G_best:
+        G_best = round(G)
+        link_with_ant_best = link_with_ant
+        delta_tau = (G_best - G_y0)/10000
 
     for link in range(len(tau)):
         for n in range(len(tau[link])):
             if link_with_ant_best[link][n] > 0:
                 tau[link][n] = rho * tau[link][n] + delta_tau
             else:
-                tau[link][n] *= .5
-print(G_best)
+                tau[link][n] *= rho
+    
+
+    # Additional Step- Avoiding local optima
+    if len(all_G) > 3 and all_G[-1] == all_G[-2] == all_G[-3] == (G_best):
+        same_G += 1
+        
+        # 2nd. stagnation (when the optimal solution is repeated
+        # for 3 times) is stopping criteria
+        if same_G > 1:
+            break
+
+        # calculating average tau of each n:
+        avg_tau = []
+        tmp_avg = 0
+        for n in range(max_n):
+            for link in range(len(tau)):
+                tmp_avg += (1/len(tau)) * tau[link][n]
+            avg_tau.append(tmp_avg)
+            tmp_avg = 0
+
+        round_to_tenths = [round(num, 3) for num in tau[0]]
+        print(round_to_tenths)
+        
+        # pheromone of links below the average level is added to avg. phr.,
+        # and subtract avg. phr. from those above the average level.
+        for link in range(len(tau)):
+            for n in range(len(tau[link])):
+                if tau[link][n] > avg_tau[n]:
+                    tau[link][n] -= avg_tau[n]
+                else:
+                    tau[link][n] += avg_tau[n]
+        print('')
+        round_to_tenths = [round(num, 3) for num in tau[0]]
+        print(round_to_tenths)
+
+
+
+
+
+print((G_best))
 #print(link_with_ant_best)    
 
 
