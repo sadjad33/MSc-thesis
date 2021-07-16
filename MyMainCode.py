@@ -72,12 +72,10 @@ textfile = open("results.txt", "w")
 phrfile1 = open('phr1.txt', 'w')
 phrfile2 = open('phr2.txt', 'w')
 phrfile3 = open('phr3.txt', 'w')
-antlink = open('antlink.txt', 'w')
-antlink1 = open('antlink1.txt', 'w')
-antlink2 = open('antlink2.txt', 'w')
-antlink3 = open('antlink3.txt', 'w')
+antnetw = open('antnetwork.txt', 'w')
 
-for run_no in range(10):    
+
+for run_no in range(1):    
     ### step 0 - initializing:
     # CarNetwork = [link no., i, j, t, h]
     # here is '3 node 6 link network':
@@ -107,7 +105,6 @@ for run_no in range(10):
     D_s = [58.3, 11.68, 131.25]
     # travel time for damaged links in network:
     big_M = 15
-    iteration_number = 11
     G_best = 0
     max_n = 80
     beta = .4
@@ -243,7 +240,6 @@ for run_no in range(10):
 
 
     ### Step 3 - Allocate ants and determine the reopening program (yn):
-    #for iteration in range(iteration_number):
 
     tau = [[1 for times in range(max_n)] for link in damaged_links]
     iteration = 0
@@ -267,13 +263,13 @@ for run_no in range(10):
         damaged_links = [item for item in initial_network if item[-1] != 0]
         copy_damaged_links = [item for item in initial_network if item[-1] != 0]
         n_network = [
-        [[0, 0, 1, 4],
-         [1, 1, 0, 60],
-         [2, 0, 2, 8],
-         [3, 2, 0, 50],
-         [4, 1, 2, 30],
-         [5, 2, 1, 3]]
-        ]
+            [[0, 0, 1, 4],
+             [1, 1, 0, 60],
+             [2, 0, 2, 8],
+             [3, 2, 0, 50],
+             [4, 1, 2, 30],
+             [5, 2, 1, 3]]
+            ]
 
         ants_condition = [1, 1, 1]
         ants_depot = [1, 1, 0]          # ant condition = 1
@@ -281,10 +277,12 @@ for run_no in range(10):
         ants_link = [-1, -1, -1]        # ant condition = 3
         link_with_ant = [[0 for times in range(max_n)] for link in damaged_links]
         link_time_to_finish = [item[-1] for item in initial_network]
-        
+        ants_link_result = [[0 for times in range(max_n)] for ants in ants_link]
 
 
         for n in range(max_n):
+
+
 
             #print(f'time= {n}, ant state= {ants_condition}')
             for ant_no, ant_state in enumerate(ants_condition):
@@ -334,6 +332,9 @@ for run_no in range(10):
                         dmg_index = copy_damaged_links.index(initial_network[ants_link[ant_no]])
                         link_with_ant[dmg_index][n] += 1
 
+                    for i in range(len(ants_link)):
+                        ants_link_result[i][n] = ants_link[i]
+                    
             # updating n_network
             n_network.append([])
             for link in initial_network:
@@ -342,6 +343,14 @@ for run_no in range(10):
                 if link_tmp in damaged_links:
                     n_network[n + 1][-1][3] = n_network[n + 1][-1][4]
                 n_network[n + 1][-1].pop()
+
+
+
+        for i in ants_link_result:
+            for j in i:
+                antnetw.write(str(j) + "\t")
+            antnetw.write('\n')
+        antnetw.write('\n')
 
             #print('n_network=', n_network[-1])
 
@@ -418,27 +427,13 @@ for run_no in range(10):
                         tau[link][n] += avg_tau[n]
             # print('')
             # round_to_tenths = [round(num, 3) for num in tau[0]]
-            # print(round_to_tenths)
-        if iteration > 300:
+            # print(round_to_tenths)       
+
+        if iteration > 31:
             break
-    
-        for link in link_with_ant[0]:
-            antlink1.write(str(link) + "\t")
-        antlink1.write('\n')       
-
-        for link in link_with_ant[1]:
-            antlink2.write(str(link) + "\t")
-        antlink2.write('\n')
-
-        for link in link_with_ant[2]:
-            antlink3.write(str(link) + "\t")
-        antlink3.write('\n')
 
 
-    for a in link_with_ant_best:
-        for link in a:
-            antlink.write(str(link) + "\t")
-        antlink.write('\n')
+
 
 
     for element in all_G:
@@ -447,15 +442,8 @@ for run_no in range(10):
     phrfile1.write('\n')
     phrfile2.write('\n')
     phrfile3.write('\n')
-    antlink.write('\n')
-    antlink1.write('\n')
-    antlink2.write('\n')
-    antlink3.write('\n')
 
-antlink.close()
-antlink1.close()
-antlink2.close()
-antlink3.close()
+antnetw.close()
 phrfile1.close()
 phrfile2.close()
 phrfile3.close()
