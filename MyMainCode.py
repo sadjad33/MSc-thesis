@@ -69,11 +69,15 @@ def shortest_path(origin, car_network_sp):
 
     return time, label
 textfile = open("results.txt", "w")     
-# phrfile1 = open('phr1.txt', 'w')
-# phrfile2 = open('phr2.txt', 'w')
-# phrfile3 = open('phr3.txt', 'w')
+phrfile1 = open('phr1.txt', 'w')
+phrfile2 = open('phr2.txt', 'w')
+phrfile3 = open('phr3.txt', 'w')
+antlink = open('antlink.txt', 'w')
+antlink1 = open('antlink1.txt', 'w')
+antlink2 = open('antlink2.txt', 'w')
+antlink3 = open('antlink3.txt', 'w')
 
-for run_no in range(37):    
+for run_no in range(10):    
     ### step 0 - initializing:
     # CarNetwork = [link no., i, j, t, h]
     # here is '3 node 6 link network':
@@ -106,8 +110,9 @@ for run_no in range(37):
     iteration_number = 11
     G_best = 0
     max_n = 80
-    beta = .5
+    beta = .4
     rho = .5
+    scale = 5
 
 
     def survival_function(t_w):
@@ -171,7 +176,7 @@ for run_no in range(37):
         # utility function:
         for i, link in enumerate(tau):
             for j, tau_nl in enumerate(link):
-                utility_u[i][j] = (tau_nl + beta * link_visibility[i])
+                utility_u[i][j] = (tau_nl + beta * link_visibility[i]) * scale
         # u matrix is like tau
         # (with l rows and n columns)
         return utility_u
@@ -246,17 +251,17 @@ for run_no in range(37):
     same_G = 0
     while True:
         iteration += 1
-        # for phr in tau[0]:
-        #     phrfile1.write(str(phr) + "\t")
-        # phrfile1.write('\n')
+        for phr in tau[0]:
+            phrfile1.write(str(phr) + "\t")
+        phrfile1.write('\n')
 
-        # for phr in tau[1]:
-        #     phrfile2.write(str(phr) + "\t")
-        # phrfile2.write('\n')
+        for phr in tau[1]:
+            phrfile2.write(str(phr) + "\t")
+        phrfile2.write('\n')
 
-        # for phr in tau[2]:
-        #     phrfile3.write(str(phr) + "\t")
-        # phrfile3.write('\n')
+        for phr in tau[2]:
+            phrfile3.write(str(phr) + "\t")
+        phrfile3.write('\n')
 
         print('T=', iteration)
         damaged_links = [item for item in initial_network if item[-1] != 0]
@@ -276,9 +281,11 @@ for run_no in range(37):
         ants_link = [-1, -1, -1]        # ant condition = 3
         link_with_ant = [[0 for times in range(max_n)] for link in damaged_links]
         link_time_to_finish = [item[-1] for item in initial_network]
+        
 
 
         for n in range(max_n):
+
             #print(f'time= {n}, ant state= {ants_condition}')
             for ant_no, ant_state in enumerate(ants_condition):
                 if not damaged_links:
@@ -370,7 +377,7 @@ for run_no in range(37):
         G_y0 = 8648
         if G >= G_best:
             G_best = round(G)
-            link_with_ant_best = link_with_ant
+            link_with_ant_best = [[j for j in i] for i in link_with_ant]
             delta_tau = (G_best - G_y0)/10000
 
         for link in range(len(tau)):
@@ -398,7 +405,6 @@ for run_no in range(37):
                     tmp_avg += (1/len(tau)) * tau[link][n]
                 avg_tau.append(tmp_avg)
                 tmp_avg = 0
-
             # round_to_tenths = [round(num, 3) for num in tau[0]]
             # print(round_to_tenths)
             
@@ -413,20 +419,46 @@ for run_no in range(37):
             # print('')
             # round_to_tenths = [round(num, 3) for num in tau[0]]
             # print(round_to_tenths)
+        if iteration > 300:
+            break
+    
+        for link in link_with_ant[0]:
+            antlink1.write(str(link) + "\t")
+        antlink1.write('\n')       
 
+        for link in link_with_ant[1]:
+            antlink2.write(str(link) + "\t")
+        antlink2.write('\n')
+
+        for link in link_with_ant[2]:
+            antlink3.write(str(link) + "\t")
+        antlink3.write('\n')
+
+
+    for a in link_with_ant_best:
+        for link in a:
+            antlink.write(str(link) + "\t")
+        antlink.write('\n')
 
 
     for element in all_G:
         textfile.write(str(element) + "\t")
     textfile.write('\n')
-#     phrfile1.write('\n')
-#     phrfile2.write('\n')
-#     phrfile3.write('\n')
+    phrfile1.write('\n')
+    phrfile2.write('\n')
+    phrfile3.write('\n')
+    antlink.write('\n')
+    antlink1.write('\n')
+    antlink2.write('\n')
+    antlink3.write('\n')
 
-
-# phrfile1.close()
-# phrfile2.close()
-# phrfile3.close()
+antlink.close()
+antlink1.close()
+antlink2.close()
+antlink3.close()
+phrfile1.close()
+phrfile2.close()
+phrfile3.close()
 textfile.close()
 print((G_best))
 #print(link_with_ant_best)
