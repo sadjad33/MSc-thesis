@@ -68,14 +68,10 @@ def shortest_path(origin, car_network_sp):
         counter += 1
 
     return time, label
-textfile = open("results.txt", "w")     
-phrfile1 = open('phr1.txt', 'w')
-phrfile2 = open('phr2.txt', 'w')
-phrfile3 = open('phr3.txt', 'w')
-antnetw = open('antnetwork.txt', 'w')
-
-
-for run_no in range(1):    
+miss_g = {0}
+all_G = {0}  
+exhaustive_enumeration = {}
+for run_no in range(100):    
     ### step 0 - initializing:
     # CarNetwork = [link no., i, j, t, h]
     # here is '3 node 6 link network':
@@ -101,15 +97,15 @@ for run_no in range(1):
                 + [link[2] for link in initial_network])
 
     # here is Ok (rescue teams in node k) and Ds (demand in node s):
-    O_k = [1, 2, 0]
+    O_k = [0, 0, 0]
     D_s = [58.3, 11.68, 131.25]
     # travel time for damaged links in network:
     big_M = 15
+    iteration_number = 30
     G_best = 0
     max_n = 80
     beta = .4
     rho = .5
-    scale = 5
 
 
     def survival_function(t_w):
@@ -122,62 +118,12 @@ for run_no in range(1):
     ### Step 1 - Calculation of initial pheromone
     # and visibility for damaged links:
     # initial pheromone tau(0) of each damaged link:
-    tau = [[1 for times in range(max_n)] for link in damaged_links]
-
-
     # tau is a matrix with l rows and n columns
-
-    # visibility of each damaged link:
-    def link_visibility():
-        #   Vl = Σ[(Ok*Ds)/(tks_b)] - Σ[(Ok*Ds)/(tks_-l)]
-        # this function returns an array of l item (Vl).
-        #
-        vis = []
-        base = 0
-        for i, ok in enumerate(O_k):
-            for j, ds in enumerate(D_s):
-                if i != j and ok != 0:
-                    tks_b = shortest_path(origin=i, car_network_sp=initial_network)[0][j]
-                    base += (ok * ds) / (tks_b)
-
-        for l in damaged_links:
-            #    creating a network without l:
-            no_l_network = [item[:] for item in initial_network]
-            #    print(initial_network)
-            no_l_network[l[0]][3] = big_M
-            #    print(no_l_network)
-            no_l = 0
-            for i, ok in enumerate(O_k):
-                for j, ds in enumerate(D_s):
-                    if i != j and ok != 0:
-                        tks_no_l = shortest_path(origin=i, car_network_sp=no_l_network)[0][j]
-                        #                print(f'k= {i+1}, s= {j+1}')
-                        no_l += (ok * ds) / (tks_no_l)
-            #                print(f'tks= {tks_no_l}')
-            #    print(f'l= ({l[1]+1}, {l[2]+1}) , no_l= {no_l}')
-            vis.append(base - no_l)
-        #    vis = [visibility of first dmgd link, ..., visibility of last dmgd link]
-        #    visibility should not be greater than 1:
-        scaled_visibility = []
-        for item in vis:
-            scaled_visibility.append(item / max(vis))
-        return (scaled_visibility)
-
-    link_visibility = link_visibility()
 
 
     ### Step 2 - Calculating the probability of selecting links for ants:
 
-    def utility():
-        utility_u = [[0 for i in links] for links in tau]
-        # utility function:
-        for i, link in enumerate(tau):
-            for j, tau_nl in enumerate(link):
-                utility_u[i][j] = (tau_nl + beta * link_visibility[i]) * scale
-        # u matrix is like tau
-        # (with l rows and n columns)
-        return utility_u
-
+    utility = [[1 for times in range(max_n)] for link in damaged_links]
 
     def L(n_L, i_L):
         #   it gets n (time) as input and returns L array
@@ -200,7 +146,7 @@ for run_no in range(1):
 
     def chosen_link(n_p, i_p):
         #   it takes n (time) and i (ant depot) as input
-        u_n = [utility()[links][n_p] for links in range(len(damaged_links))]
+        u_n = [utility[links][n_p] for links in range(len(damaged_links))]
         prob = []
         L_node = L(n_L=n_p, i_L=i_p)
         p_denominator = 0
@@ -240,36 +186,20 @@ for run_no in range(1):
 
 
     ### Step 3 - Allocate ants and determine the reopening program (yn):
-
-    tau = [[1 for times in range(max_n)] for link in damaged_links]
-    iteration = 0
-    all_G = []
-    same_G = 0
-    while True:
-        iteration += 1
-        for phr in tau[0]:
-            phrfile1.write(str(phr) + "\t")
-        phrfile1.write('\n')
-
-        for phr in tau[1]:
-            phrfile2.write(str(phr) + "\t")
-        phrfile2.write('\n')
-
-        for phr in tau[2]:
-            phrfile3.write(str(phr) + "\t")
-        phrfile3.write('\n')
-
-        print('T=', iteration)
+    # while True:
+    for iteration in range(iteration_number):
+        # iteration += 1
+        # print(run_no, iteration)
         damaged_links = [item for item in initial_network if item[-1] != 0]
         copy_damaged_links = [item for item in initial_network if item[-1] != 0]
         n_network = [
-            [[0, 0, 1, 4],
-             [1, 1, 0, 60],
-             [2, 0, 2, 8],
-             [3, 2, 0, 50],
-             [4, 1, 2, 30],
-             [5, 2, 1, 3]]
-            ]
+        [[0, 0, 1, 4],
+         [1, 1, 0, 60],
+         [2, 0, 2, 8],
+         [3, 2, 0, 50],
+         [4, 1, 2, 30],
+         [5, 2, 1, 3]]
+        ]
 
         ants_condition = [1, 1, 1]
         ants_depot = [1, 1, 0]          # ant condition = 1
@@ -277,13 +207,9 @@ for run_no in range(1):
         ants_link = [-1, -1, -1]        # ant condition = 3
         link_with_ant = [[0 for times in range(max_n)] for link in damaged_links]
         link_time_to_finish = [item[-1] for item in initial_network]
-        ants_link_result = [[0 for times in range(max_n)] for ants in ants_link]
 
 
         for n in range(max_n):
-
-
-
             #print(f'time= {n}, ant state= {ants_condition}')
             for ant_no, ant_state in enumerate(ants_condition):
                 if not damaged_links:
@@ -332,9 +258,6 @@ for run_no in range(1):
                         dmg_index = copy_damaged_links.index(initial_network[ants_link[ant_no]])
                         link_with_ant[dmg_index][n] += 1
 
-                    for i in range(len(ants_link)):
-                        ants_link_result[i][n] = ants_link[i]
-                    
             # updating n_network
             n_network.append([])
             for link in initial_network:
@@ -344,15 +267,6 @@ for run_no in range(1):
                     n_network[n + 1][-1][3] = n_network[n + 1][-1][4]
                 n_network[n + 1][-1].pop()
 
-
-
-        for i in ants_link_result:
-            for j in i:
-                antnetw.write(str(j) + "\t")
-            antnetw.write('\n')
-        antnetw.write('\n')
-
-            #print('n_network=', n_network[-1])
 
         ### Step 4 - Calculate travel time between each origin-destination at any time:
 
@@ -379,76 +293,30 @@ for run_no in range(1):
             for s, t_ks in enumerate(tks_matrix[n]):
                 if t_ks <= big_M:
                     G += Dks[s] * survival_function(n + t_ks)
-        all_G.append(round(G))
-        print(round(G))
-
-        ### Step 6- Determining the pheromone of the links:
-        G_y0 = 8648
-        if G >= G_best:
-            G_best = round(G)
-            link_with_ant_best = [[j for j in i] for i in link_with_ant]
-            delta_tau = (G_best - G_y0)/10000
-
-        for link in range(len(tau)):
-            for n in range(len(tau[link])):
-                if link_with_ant_best[link][n] > 0:
-                    tau[link][n] = rho * tau[link][n] + delta_tau
-                else:
-                    tau[link][n] *= rho
-        
-
-        # Additional Step- Avoiding local optima
-        if len(all_G) > 3 and all_G[-1] == all_G[-2] == all_G[-3] == (G_best):
-            same_G += 1
-            
-            # 2nd. stagnation (when the optimal solution is repeated
-            # for 3 times) is stopping criteria
-            if same_G > 1:
-                break
-
-            # calculating average tau of each n:
-            avg_tau = []
-            tmp_avg = 0
-            for n in range(max_n):
-                for link in range(len(tau)):
-                    tmp_avg += (1/len(tau)) * tau[link][n]
-                avg_tau.append(tmp_avg)
-                tmp_avg = 0
-            # round_to_tenths = [round(num, 3) for num in tau[0]]
-            # print(round_to_tenths)
-            
-            # pheromone of links below the average level is added to avg. phr.,
-            # and subtract avg. phr. from those above the average level.
-            for link in range(len(tau)):
-                for n in range(len(tau[link])):
-                    if tau[link][n] > avg_tau[n]:
-                        tau[link][n] -= avg_tau[n]
-                    else:
-                        tau[link][n] += avg_tau[n]
-            # print('')
-            # round_to_tenths = [round(num, 3) for num in tau[0]]
-            # print(round_to_tenths)       
-
-        if iteration > 31:
-            break
+        all_G.add(round(G))
+        # exhaustive_enumeration[round(G)] = link_with_ant
+    # if len(exhaustive_enumeration) == 28:
+    #     print(run_no)
+    #     break
 
 
 
 
+textfile = open("P4.txt", "w")
+# for solution in exhaustive_enumeration:
+#     linkfile.write(str(solution) + '\n')
+#     for link in exhaustive_enumeration[solution]:
+#         for ants in link:
+#             linkfile.write('\t' + str(ants))
+#         linkfile.write('\n')
+# linkfile.close()
 
-    for element in all_G:
-        textfile.write(str(element) + "\t")
-    textfile.write('\n')
-    phrfile1.write('\n')
-    phrfile2.write('\n')
-    phrfile3.write('\n')
-
-antnetw.close()
-phrfile1.close()
-phrfile2.close()
-phrfile3.close()
+# textfile = open("results.txt", "w")
+for element in all_G:
+    textfile.write(str(element) + "\t")
+textfile.write('\n')
 textfile.close()
-print((G_best))
+# print((G_best))
 #print(link_with_ant_best)
 
 
